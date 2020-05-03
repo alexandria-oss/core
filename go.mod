@@ -1,4 +1,4 @@
-module github.com/alexandria-oss/alexandria/core
+module github.com/alexandria-oss/core
 
 go 1.13
 
