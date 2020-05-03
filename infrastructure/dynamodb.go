@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/maestre3d/alexandria/core-go/config"
+	"github.com/alexandria-oss/core/config"
 	"gocloud.dev/docstore"
 	_ "gocloud.dev/docstore/awsdynamodb"
 )

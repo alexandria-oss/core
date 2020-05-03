@@ -5,7 +5,7 @@ import (
 	"database/sql"
 	"time"
 
-	"github.com/maestre3d/alexandria/core-go/config"
+	"github.com/alexandria-oss/core/config"
 	"gocloud.dev/postgres"
 )
 

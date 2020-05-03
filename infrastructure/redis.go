@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/go-redis/redis/v7"
-	"github.com/maestre3d/alexandria/core-go/config"
+	"github.com/alexandria-oss/core/config"
 )
 
 // NewRedisPool Obtain a Redis connection pool
