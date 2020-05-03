@@ -1,4 +1,4 @@
-package infrastructure
+package logger
 
 import (
 	"github.com/go-kit/kit/log"

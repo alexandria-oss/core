@@ -13,14 +13,14 @@ type eventBus struct {
 }
 
 func setEventBusDefaultConfig() {
-	viper.SetDefault("alexandria.event.kafka.cluster.leader.host", "0.0.0.0")
-	viper.SetDefault("alexandria.event.kafka.cluster.leader.port", 9092)
+	viper.SetDefault("alexandria.eventbus.kafka.cluster.leader.host", "0.0.0.0")
+	viper.SetDefault("alexandria.eventbus.kafka.cluster.leader.port", 9092)
 }
 
 func newEventBusConfig() eventBus {
 	cfg := eventBus{
-		KafkaHost: viper.GetString("alexandria.event.kafka.cluster.leader.host"),
-		KafkaPort: viper.GetInt("alexandria.event.kafka.cluster.leader.port"),
+		KafkaHost: viper.GetString("alexandria.eventbus.kafka.cluster.leader.host"),
+		KafkaPort: viper.GetInt("alexandria.eventbus.kafka.cluster.leader.port"),
 	}
 
 	// Start up required kafka env
