@@ -2,49 +2,133 @@ package eventbus
 
 import (
 	"context"
-	"github.com/google/uuid"
 	"strings"
+	"sync"
 	"time"
 
+	"github.com/google/uuid"
+	"github.com/sony/sonyflake"
 	"gocloud.dev/pubsub"
 )
 
 // Event Represents an event log record
-/*
-*	Service Name = Service who dispatched the event
-*	Transaction ID = Distributed transaction ID *Only for SAGA transaction
-*	Event Type = Type of the event dispatched (integration or domain)
-*	Content = Message body, mostly bytes or JSON-into string
-*	Importance = Event's importance
-*	Provider = Message Broker Provider (Kafka, RabbitMQ)
-*	Dispatch Time = Event's dispatching timestamp
- */
+//	It is formed by the following fields:
+//	- Service Name = Service who dispatched the event, aka. Event source
+//	- Transaction ID = Distributed transaction ID *Only for SAGA transaction
+//	- Event Type = Type of the event dispatched (integration or domain)
+//	- Content = Message body, mostly bytes or marshalled JSON
+//	- Priority = Event's priority type
+//	- Provider = Message Broker/Queue-Notification Provider (Kafka, RabbitMQ)
+//	- Dispatch Time = Event's dispatching timestamp
 type Event struct {
 	ID            string `json:"event_id"`
 	ServiceName   string `json:"service_name"`
-	TransactionID string `json:"transaction_id,omitempty"`
+	TransactionID uint64 `json:"transaction_id,omitempty"`
 	EventType     string `json:"event_type"`
-	Content       string `json:"content"`
-	Importance    string `json:"importance"`
+	Content       []byte `json:"content"`
+	Priority      string `json:"importance"`
 	Provider      string `json:"provider"`
 	DispatchTime  int64  `json:"dispatch_time"`
 }
 
-func NewEvent(serviceName, eventType, content, importance, provider string) *Event {
+const (
+	// EventDomain Domain event type
+	EventDomain = "EVENT_DOMAIN"
+	// EventIntegration Integration event type
+	EventIntegration = "EVENT_INTEGRATION"
+	// ProviderKafka Apache Kafka provider type
+	ProviderKafka = "PROVIDER_KAFKA"
+	// ProviderRabbitMQ RabbitMQ provider type
+	ProviderRabbitMQ = "PROVIDER_RABBITMQ"
+	// ProviderNATS NATS provider type
+	ProviderNATS = "PROVIDER_NATS"
+	// ProviderAWS AWS SQS/SNS provider type
+	ProviderAWS = "PROVIDER_AWS"
+	// PriorityLow Low event's priority
+	PriorityLow = "PRIORITY_LOW"
+	// PriorityMid Middle event's priority
+	PriorityMid = "PRIORITY_MID"
+	// PriorityHigh High event's priority
+	PriorityHigh = "PRIORITY_HIGH"
+)
+
+var mtx *sync.Mutex
+
+func init() {
+	mtx = new(sync.Mutex)
+}
+
+// NewEvent returns a new Event ready to be used by an Event Bus
+func NewEvent(serviceName, eventType, priority, provider string, content []byte, isTransaction bool) *Event {
+	mtx.Lock()
+	defer mtx.Unlock()
+
+	// Generate distributed ID
+	var err error
+	var distID uint64
+	distID = 0
+
+	if isTransaction {
+		flake := sonyflake.NewSonyflake(sonyflake.Settings{
+			StartTime:      time.Time{},
+			MachineID:      nil,
+			CheckMachineID: nil,
+		})
+
+		distID, err = flake.NextID()
+		if err != nil {
+			return nil
+		}
+	}
+
+	// Validate payload
+	eventType = strings.ToUpper(eventType)
+	eventType = isEventTypeValid(eventType)
+
+	priority = strings.ToUpper(priority)
+	priority = isPriorityValid(priority)
+
+	provider = strings.ToUpper(provider)
+	provider = isProviderValid(provider)
+
 	return &Event{
 		ID:            uuid.New().String(),
 		ServiceName:   strings.ToUpper(serviceName),
-		TransactionID: uuid.New().String(),
-		EventType:     strings.ToUpper(eventType),
+		TransactionID: distID,
+		EventType:     eventType,
 		Content:       content,
-		Importance:    strings.ToUpper(importance),
-		Provider:      strings.ToUpper(provider),
+		Priority:      priority,
+		Provider:      provider,
 		// Unix to millis
 		DispatchTime: time.Now().UnixNano() / 1000000,
 	}
 }
 
-// ListenSubscriber Listen to a Pub/Sub subscription concurrently
+func isEventTypeValid(eventType string) string {
+	if eventType != EventDomain && eventType != EventIntegration {
+		return EventDomain
+	}
+
+	return eventType
+}
+
+func isPriorityValid(priority string) string {
+	if priority != PriorityLow && priority != PriorityMid && priority != PriorityHigh {
+		return PriorityLow
+	}
+
+	return priority
+}
+
+func isProviderValid(provider string) string {
+	if provider != ProviderKafka && provider != ProviderRabbitMQ && provider != ProviderAWS && provider != ProviderNATS {
+		return ProviderKafka
+	}
+
+	return provider
+}
+
+// ListenSubscriber Listen to a subscription concurrently
 func ListenSubscriber(ctx context.Context, subscription *pubsub.Subscription) {
 	defer subscription.Shutdown(ctx)
 

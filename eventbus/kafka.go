@@ -9,7 +9,7 @@ import (
 	_ "gocloud.dev/pubsub/kafkapubsub"
 )
 
-// NewKafkaConsumer Obtain a new Apache Kafka consumer (subsciber)
+// NewKafkaConsumer Obtain a new Apache Kafka consumer (subscriber)
 // * Requires KAFKA_BROKERS OS env variable
 func NewKafkaConsumer(ctx context.Context, consumerGroup, topic string) (*pubsub.Subscription, error) {
 	consumerSub, err := pubsub.OpenSubscription(ctx, fmt.Sprintf(`kafka://%s?topic=%s`,
