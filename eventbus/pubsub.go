@@ -2,9 +2,47 @@ package eventbus
 
 import (
 	"context"
+	"github.com/google/uuid"
+	"strings"
+	"time"
 
 	"gocloud.dev/pubsub"
 )
+
+// Event Represents an event log record
+/*
+*	Service Name = Service who dispatched the event
+*	Transaction ID = Distributed transaction ID *Only for SAGA transaction
+*	Event Type = Type of the event dispatched (integration or domain)
+*	Content = Message body, mostly bytes or JSON-into string
+*	Importance = Event's importance
+*	Provider = Message Broker Provider (Kafka, RabbitMQ)
+*	Dispatch Time = Event's dispatching timestamp
+ */
+type Event struct {
+	ID            string `json:"event_id"`
+	ServiceName   string `json:"service_name"`
+	TransactionID string `json:"transaction_id,omitempty"`
+	EventType     string `json:"event_type"`
+	Content       string `json:"content"`
+	Importance    string `json:"importance"`
+	Provider      string `json:"provider"`
+	DispatchTime  int64  `json:"dispatch_time"`
+}
+
+func NewEvent(serviceName, eventType, content, importance, provider string) *Event {
+	return &Event{
+		ID:            uuid.New().String(),
+		ServiceName:   strings.ToUpper(serviceName),
+		TransactionID: uuid.New().String(),
+		EventType:     strings.ToUpper(eventType),
+		Content:       content,
+		Importance:    strings.ToUpper(importance),
+		Provider:      strings.ToUpper(provider),
+		// Unix to millis
+		DispatchTime: time.Now().UnixNano() / 1000000,
+	}
+}
 
 // ListenSubscriber Listen to a Pub/Sub subscription concurrently
 func ListenSubscriber(ctx context.Context, subscription *pubsub.Subscription) {
