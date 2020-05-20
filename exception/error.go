@@ -21,3 +21,6 @@ var EntityNotFound = errors.New("resource not found")
 
 // EntitiesNotFound Entities were not found
 var EntitiesNotFound = errors.New("resources not found")
+
+// EntityExists Entity was already created
+var EntityExists = errors.New("resource already exists")
