@@ -49,8 +49,9 @@ alexandria:
   cloud:
     aws:
       cognito:
-        pool_id: "example_pool_id"
+        pool: "example_pool_id"
+        client: "example_client_id"
   security:
     auth:
       jwt:
-        secret_key: "EXAMPLE_SECRET"
+        secret: "example_secret_key"

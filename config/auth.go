@@ -7,11 +7,11 @@ type auth struct {
 }
 
 func init() {
-	viper.SetDefault("alexandria.security.auth.jwt.secret_key", "EXAMPLE_SECRET")
+	viper.SetDefault("alexandria.security.auth.jwt.secret", "example_secret")
 }
 
 func newAuthConfig() auth {
 	return auth{
-		JWTSecret: viper.GetString("alexandria.security.auth.jwt.secret_key"),
+		JWTSecret: viper.GetString("alexandria.security.auth.jwt.secret"),
 	}
 }
