@@ -9,12 +9,6 @@ const (
 	PrivateAPI = "/v1/private"
 	// AdminAPI Admin API URI
 	AdminAPI = "/v1/admin"
-	// RoleRoot Superuser role
-	RoleRoot = "ROLE_ROOT"
-	// RoleAdmin Administrator role
-	RoleAdmin = "ROLE_ADMIN"
-	// RoleUser Default role
-	RoleUser = "ROLE_USER"
 	// LocaleDefault Locale default value
 	LocaleDefault = "EN-US"
 )
