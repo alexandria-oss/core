@@ -12,14 +12,14 @@ type dbms struct {
 	Database string
 }
 
-func setDBMSDefaultConfig() {
-	viper.SetDefault("alexandria.persistence.dbms.url", "postgres://postgres:root@localhost/alexandria-DATABASE?sslmode=disable")
+func init() {
+	viper.SetDefault("alexandria.persistence.dbms.url", "postgres://postgres:root@localhost/alexandria_DATABASE?sslmode=disable")
 	viper.SetDefault("alexandria.persistence.dbms.driver", "postgres")
 	viper.SetDefault("alexandria.persistence.dbms.user", "postgres")
 	viper.SetDefault("alexandria.persistence.dbms.password", "root")
 	viper.SetDefault("alexandria.persistence.dbms.host", "0.0.0.0")
 	viper.SetDefault("alexandria.persistence.dbms.port", 5432)
-	viper.SetDefault("alexandria.persistence.dbms.database", "alexandria-DATABASE")
+	viper.SetDefault("alexandria.persistence.dbms.database", "alexandria_DATABASE")
 }
 
 func newDBMSConfig() dbms {

@@ -9,7 +9,7 @@ type transport struct {
 	RPCPort  int
 }
 
-func setTransportDefaultConfig() {
+func init() {
 	// HTTP
 	viper.SetDefault("alexandria.service.transport.http.host", "0.0.0.0")
 	viper.SetDefault("alexandria.service.transport.http.port", 8080)

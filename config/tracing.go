@@ -8,7 +8,7 @@ type tracing struct {
 	ZipkinBridge   bool
 }
 
-func setTracingDefaultConfig() {
+func init() {
 	viper.SetDefault("alexandria.tracing.zipkin.host", "http://localhost:9411/api/v2/spans")
 	viper.SetDefault("alexandria.tracing.zipkin.endpoint", "0.0.0.0:8080")
 	viper.SetDefault("alexandria.tracing.zipkin.bridge", true)

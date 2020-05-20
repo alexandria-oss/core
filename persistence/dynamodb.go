@@ -11,15 +11,15 @@ import (
 )
 
 // NewDynamoDBCollectionPool Obtain an AWS DynamoDB collection connection pool
-func NewDynamoDBCollectionPool(ctx context.Context, cfg *config.KernelConfiguration) (*docstore.Collection, func(), error) {
-	URL := fmt.Sprintf("dynamodb://%s?partition_key=%s", cfg.DocstoreConfig.Collection,
-		strings.ToLower(cfg.DocstoreConfig.PartitionKey))
+func NewDynamoDBCollectionPool(ctx context.Context, cfg *config.Kernel) (*docstore.Collection, func(), error) {
+	URL := fmt.Sprintf("dynamodb://%s?partition_key=%s", cfg.Docstore.Collection,
+		strings.ToLower(cfg.Docstore.PartitionKey))
 
-	if cfg.DocstoreConfig.AllowScan {
+	if cfg.Docstore.AllowScan {
 		URL += "&allow_scans=true"
 	}
-	if cfg.DocstoreConfig.SortKey != "" {
-		URL += "&sort_key=" + strings.ToLower(cfg.DocstoreConfig.SortKey)
+	if cfg.Docstore.SortKey != "" {
+		URL += "&sort_key=" + strings.ToLower(cfg.Docstore.SortKey)
 	}
 
 	db, err := docstore.OpenCollection(ctx, URL)
@@ -28,7 +28,7 @@ func NewDynamoDBCollectionPool(ctx context.Context, cfg *config.KernelConfigurat
 	}
 
 	cleanup := func() {
-		err = db.Close()
+		_ = db.Close()
 	}
 
 	return db, cleanup, nil

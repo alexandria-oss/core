@@ -9,7 +9,7 @@ type docstore struct {
 	AllowScan    bool
 }
 
-func setDocstoreDefaultConfig() {
+func init() {
 	viper.SetDefault("alexandria.persistence.doc.collection", "ALEXANDRIA_COLLECTION")
 	viper.SetDefault("alexandria.persistence.doc.partition_key", "")
 	viper.SetDefault("alexandria.persistence.doc.sort_key", "")

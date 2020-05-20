@@ -10,8 +10,8 @@ import (
 )
 
 // NewPostgresPool Obtain a PostgreSQL connection pool
-func NewPostgresPool(ctx context.Context, cfg *config.KernelConfiguration) (*sql.DB, func(), error) {
-	db, err := postgres.Open(ctx, cfg.DBMSConfig.URL)
+func NewPostgresPool(ctx context.Context, cfg *config.Kernel) (*sql.DB, func(), error) {
+	db, err := postgres.Open(ctx, cfg.DBMS.URL)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -20,7 +20,7 @@ func NewPostgresPool(ctx context.Context, cfg *config.KernelConfiguration) (*sql
 	db.SetMaxIdleConns(10)
 
 	cleanup := func() {
-		err = db.Close()
+		_ = db.Close()
 	}
 
 	return db, cleanup, nil

@@ -10,7 +10,7 @@ type inMemory struct {
 	Database string
 }
 
-func setInMemoryDefaultConfig() {
+func init() {
 	viper.SetDefault("alexandria.persistence.mem.network", "")
 	viper.SetDefault("alexandria.persistence.mem.host", "0.0.0.0")
 	viper.SetDefault("alexandria.persistence.mem.port", 6379)

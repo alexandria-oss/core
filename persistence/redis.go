@@ -5,23 +5,23 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/go-redis/redis/v7"
 	"github.com/alexandria-oss/core/config"
+	"github.com/go-redis/redis/v7"
 )
 
 // NewRedisPool Obtain a Redis connection pool
-func NewRedisPool(cfg *config.KernelConfiguration) (*redis.Client, func(), error) {
-	db, err := strconv.Atoi(cfg.InMemoryConfig.Database)
+func NewRedisPool(cfg *config.Kernel) (*redis.Client, func(), error) {
+	db, err := strconv.Atoi(cfg.InMemory.Database)
 	if err != nil {
 		db = 0
 	}
 
 	client := redis.NewClient(&redis.Options{
-		Network:            cfg.InMemoryConfig.Network,
-		Addr:               cfg.InMemoryConfig.Host + fmt.Sprintf(":%d", cfg.InMemoryConfig.Port),
+		Network:            cfg.InMemory.Network,
+		Addr:               cfg.InMemory.Host + fmt.Sprintf(":%d", cfg.InMemory.Port),
 		Dialer:             nil,
 		OnConnect:          nil,
-		Password:           cfg.InMemoryConfig.Password,
+		Password:           cfg.InMemory.Password,
 		DB:                 db,
 		MaxRetries:         10,
 		MinRetryBackoff:    0,
@@ -41,7 +41,7 @@ func NewRedisPool(cfg *config.KernelConfiguration) (*redis.Client, func(), error
 
 	cleanup := func() {
 		if client != nil {
-			client.Close()
+			_ = client.Close()
 		}
 	}
 

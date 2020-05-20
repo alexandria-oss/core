@@ -6,27 +6,37 @@ import (
 	"github.com/spf13/viper"
 )
 
-// KernelConfiguration Alexandria kernel configuration struct
+// Kernel Alexandria kernel configuration struct
 // Generates required OS env variables
-type KernelConfiguration struct {
-	TransportConfig transport
-	TracingConfig   tracing
+type Kernel struct {
+	Transport transport
+	Tracing   tracing
 
-	EventBusConfig eventBus
+	EventBus eventBus
 
-	DocstoreConfig docstore
-	DBMSConfig     dbms
-	InMemoryConfig inMemory
+	Docstore docstore
+	DBMS     dbms
+	InMemory inMemory
+
+	AWS aws
+
+	Auth auth
 
 	Version string
 	Service string
 }
 
-// NewKernelConfiguration Generate a global configuration from alexandria-config.yml file
-func NewKernelConfiguration(ctx context.Context) (*KernelConfiguration, error) {
+func init() {
+	// Service info
+	viper.SetDefault("alexandria.info.version", "0.1.0")
+	viper.SetDefault("alexandria.info.service", "example-service")
+}
+
+// NewKernel Generate a global configuration from alexandria-config.yml file
+func NewKernel(ctx context.Context) (*Kernel, error) {
 	// Context is required to use gocloud.dev functions
 
-	kernelConfig := new(KernelConfiguration)
+	kernelConfig := new(Kernel)
 
 	// Init config
 	viper.SetConfigName("alexandria-config")
@@ -36,35 +46,25 @@ func NewKernelConfiguration(ctx context.Context) (*KernelConfiguration, error) {
 	viper.AddConfigPath("$HOME/.alexandria")
 	viper.AddConfigPath(".")
 
-	// Set default
-	setTransportDefaultConfig()
-	setTracingDefaultConfig()
-	setEventBusDefaultConfig()
-	setDocstoreDefaultConfig()
-	setDBMSDefaultConfig()
-	setInMemoryDefaultConfig()
-
-	// Service info
-	viper.SetDefault("alexandria.info.version", "")
-	viper.SetDefault("alexandria.info.service", "")
-
 	// Open config
 	if err := viper.ReadInConfig(); err != nil {
 		if _, ok := err.(viper.ConfigFileNotFoundError); ok {
 			// Config file not found; ignore error if desired
-			viper.SafeWriteConfig()
+			_ = viper.SafeWriteConfig()
 		}
 
 		// Config file was found but another error was produced, use default values
 	}
 
 	// Map kernel configuration
-	kernelConfig.TransportConfig = newTransportConfig()
-	kernelConfig.TracingConfig = newTracingConfig()
-	kernelConfig.EventBusConfig = newEventBusConfig()
-	kernelConfig.DocstoreConfig = newDocstoreConfig()
-	kernelConfig.DBMSConfig = newDBMSConfig()
-	kernelConfig.InMemoryConfig = newInMemoryConfig()
+	kernelConfig.Transport = newTransportConfig()
+	kernelConfig.Tracing = newTracingConfig()
+	kernelConfig.EventBus = newEventBusConfig()
+	kernelConfig.Docstore = newDocstoreConfig()
+	kernelConfig.DBMS = newDBMSConfig()
+	kernelConfig.InMemory = newInMemoryConfig()
+	kernelConfig.AWS = newAWSConfig()
+	kernelConfig.Auth = newAuthConfig()
 
 	kernelConfig.Version = viper.GetString("alexandria.info.version")
 	kernelConfig.Service = viper.GetString("alexandria.info.service")
