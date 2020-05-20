@@ -2,12 +2,11 @@ package eventbus
 
 import (
 	"context"
+	"github.com/alexandria-oss/core"
 	"strings"
 	"sync"
 	"time"
 
-	"github.com/google/uuid"
-	"github.com/sony/sonyflake"
 	"gocloud.dev/pubsub"
 )
 
@@ -21,14 +20,14 @@ import (
 //	- Provider = Message Broker/Queue-Notification Provider (Kafka, RabbitMQ)
 //	- Dispatch Time = Event's dispatching timestamp
 type Event struct {
-	ID            string `json:"event_id"`
-	ServiceName   string `json:"service_name"`
-	TransactionID uint64 `json:"transaction_id,omitempty"`
-	EventType     string `json:"event_type"`
-	Content       []byte `json:"content"`
-	Priority      string `json:"importance"`
-	Provider      string `json:"provider"`
-	DispatchTime  int64  `json:"dispatch_time"`
+	ID            uint64    `json:"event_id"`
+	ServiceName   string    `json:"service_name"`
+	TransactionID uint64    `json:"transaction_id,omitempty"`
+	EventType     string    `json:"event_type"`
+	Content       []byte    `json:"content"`
+	Priority      string    `json:"importance"`
+	Provider      string    `json:"provider"`
+	DispatchTime  time.Time `json:"dispatch_time"`
 }
 
 const (
@@ -64,21 +63,11 @@ func NewEvent(serviceName, eventType, priority, provider string, content []byte,
 	defer mtx.Unlock()
 
 	// Generate distributed ID
-	var err error
 	var distID uint64
 	distID = 0
 
 	if isTransaction {
-		flake := sonyflake.NewSonyflake(sonyflake.Settings{
-			StartTime:      time.Time{},
-			MachineID:      nil,
-			CheckMachineID: nil,
-		})
-
-		distID, err = flake.NextID()
-		if err != nil {
-			return nil
-		}
+		distID = core.NewSonyflakeID()
 	}
 
 	// Validate payload
@@ -92,15 +81,14 @@ func NewEvent(serviceName, eventType, priority, provider string, content []byte,
 	provider = isProviderValid(provider)
 
 	return &Event{
-		ID:            uuid.New().String(),
+		ID:            core.NewSonyflakeID(),
 		ServiceName:   strings.ToUpper(serviceName),
 		TransactionID: distID,
 		EventType:     eventType,
 		Content:       content,
 		Priority:      priority,
 		Provider:      provider,
-		// Unix to millis
-		DispatchTime: time.Now().UnixNano() / 1000000,
+		DispatchTime:  time.Now(),
 	}
 }
 
@@ -128,7 +116,8 @@ func isProviderValid(provider string) string {
 	return provider
 }
 
-// ListenSubscriber Listen to a subscription concurrently
+// ListenSubscriber listens to a subscription concurrently with a
+// semaphore pattern
 func ListenSubscriber(ctx context.Context, subscription *pubsub.Subscription) {
 	defer subscription.Shutdown(ctx)
 
