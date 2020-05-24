@@ -17,7 +17,7 @@ func ResponseErrJSON(w http.ResponseWriter, err error) {
 		w.WriteHeader(code)
 		errJSON := json.NewEncoder(w).Encode(&GenericResponse{
 			Message: exception.GetErrorDescription(err),
-			Code:    string(code),
+			Code:    code,
 		})
 
 		if errJSON != nil {
@@ -25,7 +25,7 @@ func ResponseErrJSON(w http.ResponseWriter, err error) {
 			w.Header().Add("Content-Type", "text/plain")
 			_, _ = fmt.Fprintf(w, `%v`, &GenericResponse{
 				Message: exception.GetErrorDescription(err),
-				Code:    string(code),
+				Code:    code,
 			})
 		}
 	}
