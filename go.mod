@@ -3,6 +3,7 @@ module github.com/alexandria-oss/core
 go 1.13
 
 require (
+	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/go-kit/kit v0.10.0
 	github.com/go-redis/redis/v7 v7.2.0
 	github.com/google/uuid v1.1.1
@@ -12,4 +13,5 @@ require (
 	go.uber.org/zap v1.13.0
 	gocloud.dev v0.19.0
 	gocloud.dev/pubsub/kafkapubsub v0.19.0
+	golang.org/x/crypto v0.0.0-20200206161412-a0c6ece9d31a
 )

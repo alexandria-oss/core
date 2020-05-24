@@ -13,8 +13,12 @@ var RequiredFieldString = "missing required request field %v"
 var InvalidFieldFormat = errors.New("request field has an invalid format")
 var InvalidFieldFormatString = "request field %v has an invalid format, expected %v"
 
+// InvalidFieldRange A field is out of range
+var InvalidFieldRange = errors.New("request field is out of range")
+var InvalidFieldRangeString = "request field %s is out of range [%s, %s)"
+
 // EmptyBody Body is empty
-var EmptyBody = errors.New("empty body")
+var EmptyBody = errors.New("no parameters found")
 
 // EntityNotFound Entity was not found
 var EntityNotFound = errors.New("resource not found")
