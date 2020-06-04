@@ -12,6 +12,7 @@ import (
 // ResponseErrJSON writes the required error's HTTP status and message using io.Writer
 // from the HTTP handler, implements gokit's error encoder
 func ResponseErrJSON(ctx context.Context, err error, w http.ResponseWriter) {
+	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	if err != nil {
 		code := ErrorToCode(err)
 
@@ -23,7 +24,7 @@ func ResponseErrJSON(ctx context.Context, err error, w http.ResponseWriter) {
 
 		if errJSON != nil {
 			// Print application/text if not working
-			w.Header().Add("Content-Type", "text/plain")
+			w.Header().Add("Content-Type", "text/plain; charset=utf-8")
 			_, _ = fmt.Fprintf(w, `%v`, &GenericResponse{
 				Message: exception.GetErrorDescription(err),
 				Code:    code,
