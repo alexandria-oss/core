@@ -17,13 +17,9 @@ func NewPaginationParams(token, size string) *PaginationParams {
 		Token: "",
 		Size:  10,
 	}
+	params.Token = token
 
 	// If fields are valid, then change default param's values
-	err := ValidateUUID(token)
-	if err == nil {
-		params.Token = token
-	}
-
 	sizeInt, err := strconv.Atoi(size)
 	if err == nil && sizeInt > 0 {
 		if sizeInt > 100 {
