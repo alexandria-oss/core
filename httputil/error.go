@@ -1,6 +1,7 @@
 package httputil
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -9,8 +10,8 @@ import (
 )
 
 // ResponseErrJSON writes the required error's HTTP status and message using io.Writer
-// from the HTTP handler
-func ResponseErrJSON(w http.ResponseWriter, err error) {
+// from the HTTP handler, implements gokit's error encoder
+func ResponseErrJSON(ctx context.Context, err error, w http.ResponseWriter) {
 	if err != nil {
 		code := ErrorToCode(err)
 
