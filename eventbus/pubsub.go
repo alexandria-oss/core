@@ -1,33 +1,55 @@
 package eventbus
 
 import (
-	"context"
-	"github.com/alexandria-oss/core"
+	"github.com/google/uuid"
 	"strings"
 	"sync"
 	"time"
-
-	"gocloud.dev/pubsub"
 )
 
-// Event Represents an event log record
+// Event Represents an event log record for metadata
 //	It is formed by the following fields:
 //	- Service Name = Service who dispatched the event, aka. Event source
 //	- Transaction ID = Distributed transaction ID *Only for SAGA transaction
 //	- Event Type = Type of the event dispatched (integration or domain)
 //	- Content = Message body, mostly bytes or marshalled JSON
 //	- Priority = Event's priority type
-//	- Provider = Message Broker/Queue-Notification Provider (Kafka, RabbitMQ)
+//	- Provider = Message Broker/Queue-Notification Provider (Kafka, RabbitMQ, AWS)
 //	- Dispatch Time = Event's dispatching timestamp
 type Event struct {
-	ID            uint64    `json:"event_id"`
-	ServiceName   string    `json:"service_name"`
-	TransactionID uint64    `json:"transaction_id,omitempty"`
-	EventType     string    `json:"event_type"`
-	Content       []byte    `json:"content"`
-	Priority      string    `json:"importance"`
-	Provider      string    `json:"provider"`
-	DispatchTime  time.Time `json:"dispatch_time"`
+	ID string `json:"event_id"`
+	// ServiceName Service who dispatched the event, aka. Event source
+	ServiceName string `json:"service_name"`
+	// Event Type Type of the event dispatched (integration or domain)
+	EventType string `json:"event_type"`
+	// Content Message body, mostly bytes or marshalled JSON
+	Content []byte `json:"content"`
+	// Priority Event's priority type
+	Priority string `json:"importance"`
+	// Provider Message Broker/Queue-Notification Provider (Kafka, RabbitMQ, AWS)
+	Provider string `json:"provider"`
+	// DispatchTime Event's dispatching timestamp
+	DispatchTime time.Time `json:"dispatch_time"`
+}
+
+// Transaction represents a SAGA-like transaction entity
+type Transaction struct {
+	// ID Transaction ID
+	ID string `json:"transaction_id"`
+	// RootID Aggregate/Entity's ID
+	RootID string `json:"root_id"`
+	// SpanID OpenTracing/OpenCensus root span ID
+	SpanID string `json:"span_id,omitempty"`
+	// TraceID OpenTracing/OpenCensus trace ID
+	TraceID string `json:"trace_id,omitempty"`
+	// Operation Kind of operation to perform
+	Operation string `json:"operation"`
+	// Backup Aggregate/Entity's backup for update-like operations
+	Backup string `json:"backup,omitempty"`
+	// Code HTTP-like status code
+	Code int `json:"code"`
+	// Message Custom message for logging
+	Message string `json:"message,omitempty"`
 }
 
 const (
@@ -58,17 +80,9 @@ func init() {
 }
 
 // NewEvent returns a new Event ready to be used by an Event Bus
-func NewEvent(serviceName, eventType, priority, provider string, content []byte, isTransaction bool) *Event {
+func NewEvent(serviceName, eventType, priority, provider string, content []byte) *Event {
 	mtx.Lock()
 	defer mtx.Unlock()
-
-	// Generate distributed ID
-	var distID uint64
-	distID = 0
-
-	if isTransaction {
-		distID = core.NewSonyflakeID()
-	}
 
 	// Validate payload
 	eventType = strings.ToUpper(eventType)
@@ -81,14 +95,13 @@ func NewEvent(serviceName, eventType, priority, provider string, content []byte,
 	provider = isProviderValid(provider)
 
 	return &Event{
-		ID:            core.NewSonyflakeID(),
-		ServiceName:   strings.ToUpper(serviceName),
-		TransactionID: distID,
-		EventType:     eventType,
-		Content:       content,
-		Priority:      priority,
-		Provider:      provider,
-		DispatchTime:  time.Now(),
+		ID:           uuid.New().String(),
+		ServiceName:  strings.ToUpper(serviceName),
+		EventType:    eventType,
+		Content:      content,
+		Priority:     priority,
+		Provider:     provider,
+		DispatchTime: time.Now(),
 	}
 }
 
@@ -114,50 +127,4 @@ func isProviderValid(provider string) string {
 	}
 
 	return provider
-}
-
-// ListenSubscriber listens to a subscription concurrently with a
-// semaphore pattern
-func ListenSubscriber(ctx context.Context, subscription *pubsub.Subscription) {
-	defer subscription.Shutdown(ctx)
-
-	// Loop on received messages. We can use a channel as a semaphore to limit how
-	// many goroutines we have active at a time as well as wait on the goroutines
-	// to finish before exiting.
-	const maxHandlers = 10
-	sem := make(chan struct{}, maxHandlers)
-recvLoop:
-	for {
-		msg, err := subscription.Receive(ctx)
-		if err != nil {
-			// Errors from Receive indicate that Receive will no longer succeed.
-			// logger.Log("msg", err.Error())
-			break
-		}
-
-		// Wait if there are too many active handle goroutines and acquire the
-		// semaphore. If the context is canceled, stop waiting and start shutting
-		// down.
-		select {
-		case sem <- struct{}{}:
-		case <-ctx.Done():
-			break recvLoop
-		}
-
-		// Handle the message in a new goroutine.
-		go func() {
-			defer func() { <-sem }() // Release the semaphore.
-			defer msg.Ack()          // Messages must always be acknowledged with Ack.
-
-			// Do work based on the message, for example:
-			// logger.Log("msg", string(msg.Body))
-			// logger.Log("msg", fmt.Sprintf("%v", msg.Metadata))
-		}()
-	}
-
-	// We're no longer receiving messages. Wait to finish handling any
-	// unacknowledged messages by totally acquiring the semaphore.
-	for n := 0; n < maxHandlers; n++ {
-		sem <- struct{}{}
-	}
 }
