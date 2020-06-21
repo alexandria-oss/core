@@ -1,6 +1,9 @@
 package eventbus
 
 import (
+	"context"
+	"fmt"
+	"github.com/alexandria-oss/core/exception"
 	"github.com/google/uuid"
 	"strings"
 	"sync"
@@ -29,7 +32,7 @@ type Event struct {
 	// Provider Message Broker/Queue-Notification Provider (Kafka, RabbitMQ, AWS)
 	Provider string `json:"provider"`
 	// DispatchTime Event's dispatching timestamp
-	DispatchTime time.Time `json:"dispatch_time"`
+	DispatchTime string `json:"dispatch_time"`
 }
 
 // Transaction represents a SAGA-like transaction entity
@@ -46,10 +49,22 @@ type Transaction struct {
 	Operation string `json:"operation"`
 	// Backup Aggregate/Entity's backup for update-like operations
 	Backup string `json:"backup,omitempty"`
+}
+
+type Error struct {
 	// Code HTTP-like status code
 	Code string `json:"code"`
 	// Message Custom message for logging
 	Message string `json:"message,omitempty"`
+}
+
+// EventContextKey type-safe context key for event gathering
+type EventContextKey string
+
+// EventContext event struct for context propagation
+type EventContext struct {
+	Transaction *Transaction
+	Event       *Event
 }
 
 const (
@@ -101,8 +116,19 @@ func NewEvent(serviceName, eventType, priority, provider string, content []byte)
 		Content:      content,
 		Priority:     priority,
 		Provider:     provider,
-		DispatchTime: time.Now(),
+		DispatchTime: string(time.Now().Unix()),
 	}
+}
+
+// ExtractContext extract an event from the context
+func ExtractContext(ctx context.Context) (*EventContext, error) {
+	eC, ok := ctx.Value(EventContextKey("event")).(*EventContext)
+	if !ok {
+		return nil, exception.NewErrorDescription(exception.InvalidFieldFormat,
+			fmt.Sprintf(exception.InvalidFieldFormatString, "event", "event context"))
+	}
+
+	return eC, nil
 }
 
 func isEventTypeValid(eventType string) string {
