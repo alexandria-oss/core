@@ -47,7 +47,7 @@ type Transaction struct {
 	// Backup Aggregate/Entity's backup for update-like operations
 	Backup string `json:"backup,omitempty"`
 	// Code HTTP-like status code
-	Code int `json:"code"`
+	Code string `json:"code"`
 	// Message Custom message for logging
 	Message string `json:"message,omitempty"`
 }
