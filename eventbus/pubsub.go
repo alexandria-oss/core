@@ -28,7 +28,7 @@ type Event struct {
 	// Content Message body, mostly bytes or marshalled JSON
 	Content []byte `json:"content"`
 	// Priority Event's priority type
-	Priority string `json:"importance"`
+	Priority string `json:"priority"`
 	// Provider Message Broker/Queue-Notification Provider (Kafka, RabbitMQ, AWS)
 	Provider string `json:"provider"`
 	// DispatchTime Event's dispatching timestamp
@@ -47,8 +47,8 @@ type Transaction struct {
 	TraceID string `json:"trace_id,omitempty"`
 	// Operation Kind of operation to perform
 	Operation string `json:"operation"`
-	// Backup Aggregate/Entity's backup for update-like operations
-	Backup string `json:"backup,omitempty"`
+	// Snapshot Aggregate/Entity's backup for update-like operations
+	Snapshot string `json:"snapshot,omitempty"`
 }
 
 type Error struct {
