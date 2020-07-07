@@ -1,30 +1,37 @@
 package config
 
 import (
-	"fmt"
-	"os"
-
 	"github.com/spf13/viper"
+	"os"
 )
 
 type eventBus struct {
-	KafkaHost string
-	KafkaPort int
+	KafkaBrokers []string
 }
 
 func init() {
-	viper.SetDefault("alexandria.eventbus.kafka.cluster.leader.host", "0.0.0.0")
-	viper.SetDefault("alexandria.eventbus.kafka.cluster.leader.port", 9092)
+	viper.SetDefault("alexandria.eventbus.kafka.brokers", []string{"0.0.0.0:9092"})
 }
 
 func newEventBusConfig() eventBus {
 	cfg := eventBus{
-		KafkaHost: viper.GetString("alexandria.eventbus.kafka.cluster.leader.host"),
-		KafkaPort: viper.GetInt("alexandria.eventbus.kafka.cluster.leader.port"),
+		KafkaBrokers: viper.GetStringSlice("alexandria.eventbus.kafka.brokers"),
 	}
 
 	// Start up required kafka env
-	_ = os.Setenv("KAFKA_BROKERS", fmt.Sprintf("%s:%d", cfg.KafkaHost, cfg.KafkaPort))
+	_ = os.Setenv("KAFKA_BROKERS", getKafkaBrokerString(cfg.KafkaBrokers))
 
 	return cfg
+}
+
+func getKafkaBrokerString(brokers []string) string {
+	brokerStr := ""
+	for i, broker := range brokers {
+		brokerStr += broker
+		if len(brokers) > i+1 {
+			brokerStr += ","
+		}
+	}
+
+	return brokerStr
 }
