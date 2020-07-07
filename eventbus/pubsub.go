@@ -12,6 +12,7 @@ import (
 
 // Event Represents an event log record for metadata
 //	It is formed by the following fields:
+//  - Tracing Context = OpenCensus/OpenTracing span context for further extraction and injection
 //	- Service Name = Service who dispatched the event, aka. Event source
 //	- Transaction ID = Distributed transaction ID *Only for SAGA transaction
 //	- Event Type = Type of the event dispatched (integration or domain)
@@ -20,6 +21,8 @@ import (
 //	- Provider = Message Broker/Queue-Notification Provider (Kafka, RabbitMQ, AWS)
 //	- Dispatch Time = Event's dispatching timestamp
 type Event struct {
+	// TracingContext OpenCensus/OpenTracing span context for further extraction and injection
+	TracingContext string `json:"tracing_context"`
 	ID string `json:"event_id"`
 	// ServiceName Service who dispatched the event, aka. Event source
 	ServiceName string `json:"service_name"`
